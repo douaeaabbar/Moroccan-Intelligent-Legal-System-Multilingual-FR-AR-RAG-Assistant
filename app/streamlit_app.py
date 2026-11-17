@@ -4,20 +4,20 @@ Application Streamlit — Interface Ministère de la Justice
 Lancement : streamlit run app/streamlit_app.py
 """
 
-import os
-import time
-import json
-import pickle
 import base64
+import json
+import os
+import pickle
 import sys
 import tempfile
+import time
 import warnings
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
 
 # Make the legal_rag package in src/ importable when run with `streamlit run`
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -395,7 +395,7 @@ def load_components():
         return index, metadata, model, None
     except ImportError as e:
         return None, None, None, f"Dépendance manquante : {e}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
         return None, None, None, str(e)
 
 
@@ -435,7 +435,7 @@ def call_claude_api(question, context, lang, api_key):
 
         client = anthropic.Anthropic(api_key=api_key)
         return call_claude(question, context, lang, client)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
         return f"⚠️ Erreur API : {e}"
 
 
@@ -477,19 +477,20 @@ def extract_text_from_upload(uploaded_file):
                 if len(text.strip()) > 50
                 else "PDF scanné — installez pytesseract."
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
             return f"Erreur PDF : {e}"
     if name.endswith(".docx"):
         try:
-            from docx import Document
             import io
+
+            from docx import Document
 
             return "\n".join(
                 p.text
                 for p in Document(io.BytesIO(content)).paragraphs
                 if p.text.strip()
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
             return f"Erreur DOCX : {e}"
     return "Format non supporté."
 
@@ -895,7 +896,7 @@ with tabs[3]:
                     autopct="%1.0f%%",
                     colors=wedge_colors,
                     startangle=90,
-                    wedgeprops=dict(edgecolor="white", linewidth=2),
+                    wedgeprops={"edgecolor": "white", "linewidth": 2},
                 )
                 for t in autotexts:
                     t.set_fontsize(11)
