@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+# Let tests import the legal_rag package from src/ without installing it
+pythonpath = ["src"]
+testpaths = ["tests"]

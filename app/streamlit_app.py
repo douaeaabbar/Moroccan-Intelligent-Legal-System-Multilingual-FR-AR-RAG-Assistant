@@ -9,6 +9,7 @@ import time
 import json
 import pickle
 import base64
+import sys
 import tempfile
 import warnings
 from datetime import datetime
@@ -16,9 +17,14 @@ from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
-import numpy as np
 import pandas as pd
 
+# Make the legal_rag package in src/ importable when run with `streamlit run`
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from legal_rag.config import APP_DIR, DATA_DIR, PROC_DIR, VEC_DIR, load_env
+from legal_rag.rag import call_claude, semantic_search
+
+load_env()
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────────
@@ -30,15 +36,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# ─────────────────────────────────────────────────────────────
-#  Chemins absolus
-# ─────────────────────────────────────────────────────────────
-ROOT = Path(r"C:\Users\azuz\Downloads\legal_ai_morocco_VF\legal_ai_morocco_VF")
-VEC_DIR = ROOT / "vector_db"
-PROC_DIR = ROOT / "processed_data"
-DATA_DIR = ROOT / "data"
-APP_DIR = ROOT / "app"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -432,58 +429,12 @@ CATEGORY_COLORS = {
 # ─────────────────────────────────────────────────────────────
 #  Fonctions utilitaires
 # ─────────────────────────────────────────────────────────────
-def semantic_search(query, index, metadata, model, top_k=5, category_filter=None):
-    q_emb = model.encode([query], normalize_embeddings=True).astype(np.float32)
-    dists, idxs = index.search(q_emb, top_k * 3)
-    results, seen = [], set()
-    for dist, idx in zip(dists[0], idxs[0]):
-        if idx < 0 or idx >= len(metadata):
-            continue
-        meta = metadata[idx].copy()
-        if category_filter and meta.get("category") != category_filter:
-            continue
-        key = str(meta.get("article_text", ""))[:80]
-        if key in seen:
-            continue
-        seen.add(key)
-        meta["score"] = float(dist)
-        results.append(meta)
-        if len(results) >= top_k:
-            break
-    return results
-
-
 def call_claude_api(question, context, lang, api_key):
     try:
         import anthropic
 
         client = anthropic.Anthropic(api_key=api_key)
-        sys_fr = """Vous êtes un assistant juridique expert en droit marocain, intégré au système officiel du Ministère de la Justice.
-Basez-vous EXCLUSIVEMENT sur les articles fournis. Répondez en français.
-## 📋 Analyse de la situation
-## ⚖️ Lois applicables
-## 🛡️ Droits et obligations
-## 📝 Procédure recommandée
-## 📚 Références légales"""
-        sys_ar = """أنت مساعد قانوني خبير في القانون المغربي، مدمج في المنظومة الرسمية لوزارة العدل.
-استند حصراً إلى المواد المقدمة. أجب بالعربية.
-## 📋 تحليل الوضع
-## ⚖️ القوانين المنطبقة
-## 🛡️ الحقوق والالتزامات
-## 📝 الإجراء الموصى به
-## 📚 المراجع القانونية"""
-        msg = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1500,
-            system=sys_ar if lang == "ar" else sys_fr,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"السؤال:\n{question}\n\nالمواد القانونية:\n{context}",
-                }
-            ],
-        )
-        return msg.content[0].text
+        return call_claude(question, context, lang, client)
     except Exception as e:
         return f"⚠️ Erreur API : {e}"
 
