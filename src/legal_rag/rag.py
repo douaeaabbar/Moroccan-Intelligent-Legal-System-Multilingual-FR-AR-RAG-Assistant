@@ -53,9 +53,16 @@ def semantic_search(
     return results
 
 
+USER_LABELS = {
+    "fr": ("Question", "Articles juridiques"),
+    "ar": ("السؤال", "المواد القانونية"),
+}
+
+
 def build_user_message(question: str, context: str, lang: str) -> str:
-    """Build the user message sent to Claude (labels fixed per language in T3)."""
-    return f"السؤال:\n{question}\n\nالمواد القانونية:\n{context}"
+    """Build the user message sent to Claude, with labels in the question's language."""
+    q_label, ctx_label = USER_LABELS["ar" if lang == "ar" else "fr"]
+    return f"{q_label}:\n{question}\n\n{ctx_label}:\n{context}"
 
 
 def call_claude(question: str, context: str, lang: str, client: Any) -> str:
