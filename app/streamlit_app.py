@@ -4,21 +4,27 @@ Application Streamlit — Interface Ministère de la Justice
 Lancement : streamlit run app/streamlit_app.py
 """
 
-import os
-import time
-import json
-import pickle
 import base64
+import json
+import os
+import pickle
+import sys
 import tempfile
+import time
 import warnings
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import numpy as np
-import pandas as pd
 
+# Make the legal_rag package in src/ importable when run with `streamlit run`
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from legal_rag.config import APP_DIR, DATA_DIR, PROC_DIR, VEC_DIR, load_env
+from legal_rag.rag import call_claude, semantic_search
+
+load_env()
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────────
@@ -31,15 +37,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────────────────────
-#  Chemins absolus
-# ─────────────────────────────────────────────────────────────
-ROOT     = Path(r"C:\Users\azuz\Downloads\legal_ai_morocco_VF\legal_ai_morocco_VF")
-VEC_DIR  = ROOT / "vector_db"
-PROC_DIR = ROOT / "processed_data"
-DATA_DIR = ROOT / "data"
-APP_DIR  = ROOT / "app"
-
 
 # ─────────────────────────────────────────────────────────────
 #  Logo loader
@@ -48,7 +45,7 @@ def load_logo_b64():
     for fname, mime in [
         ("justice.svg", "image/svg+xml"),
         ("justice.png", "image/png"),
-        ("adl.svg",     "image/svg+xml"),
+        ("adl.svg", "image/svg+xml"),
     ]:
         p = APP_DIR / fname
         if p.exists():
@@ -56,12 +53,16 @@ def load_logo_b64():
                 return base64.b64encode(f.read()).decode("utf-8"), mime
     return "", ""
 
+
 LOGO_B64, LOGO_MIME = load_logo_b64()
+
 
 def logo_img_tag(height="68px") -> str:
     if LOGO_B64:
-        return (f'<img src="data:{LOGO_MIME};base64,{LOGO_B64}" '
-                f'alt="وزارة العدل" style="height:{height};width:auto;display:block">')
+        return (
+            f'<img src="data:{LOGO_MIME};base64,{LOGO_B64}" '
+            f'alt="وزارة العدل" style="height:{height};width:auto;display:block">'
+        )
     return """<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" style="height:68px;width:68px">
   <circle cx="36" cy="36" r="34" fill="none" stroke="#c8992a" stroke-width="1.5"/>
   <path d="M24 48L24 30L28 30L28 26L32 26L32 22L36 18L40 22L40 26L44 26L44 30L48 30L48 48Z"
@@ -74,7 +75,8 @@ def logo_img_tag(height="68px") -> str:
 # ─────────────────────────────────────────────────────────────
 #  CSS Global Streamlit
 # ─────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap');
 
@@ -140,7 +142,9 @@ button[data-baseweb="tab"][aria-selected="true"] {
 .mj-stat-card .ar  { font-size:13px; font-weight:600; color:#333; font-family:'Cairo',sans-serif; }
 .mj-stat-card .fr  { font-size:10px; color:#aaa; font-family:'Cairo',sans-serif; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -379,8 +383,9 @@ def load_components():
     try:
         import faiss
         from sentence_transformers import SentenceTransformer
+
         index_path = VEC_DIR / "faiss_index.bin"
-        meta_path  = VEC_DIR / "metadata.pkl"
+        meta_path = VEC_DIR / "metadata.pkl"
         if not index_path.exists() or not meta_path.exists():
             return None, None, None, f"Base vectorielle non trouvée dans : {VEC_DIR}"
         index = faiss.read_index(str(index_path))
@@ -390,7 +395,7 @@ def load_components():
         return index, metadata, model, None
     except ImportError as e:
         return None, None, None, f"Dépendance manquante : {e}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
         return None, None, None, str(e)
 
 
@@ -406,17 +411,17 @@ def load_dataframe():
 #  Constantes
 # ─────────────────────────────────────────────────────────────
 CATEGORY_LABELS = {
-    "civil":     "⚖️ Civil",
-    "penal":     "🚨 Pénal",
-    "social":    "👷 Social",
-    "familial":  "👨‍👩‍👧 Familial",
+    "civil": "⚖️ Civil",
+    "penal": "🚨 Pénal",
+    "social": "👷 Social",
+    "familial": "👨‍👩‍👧 Familial",
     "education": "🎓 Éducation",
 }
 CATEGORY_COLORS = {
-    "civil":     "#1565C0",
-    "penal":     "#B71C1C",
-    "social":    "#1B5E20",
-    "familial":  "#6A1B9A",
+    "civil": "#1565C0",
+    "penal": "#B71C1C",
+    "social": "#1B5E20",
+    "familial": "#6A1B9A",
     "education": "#E65100",
 }
 
@@ -424,97 +429,68 @@ CATEGORY_COLORS = {
 # ─────────────────────────────────────────────────────────────
 #  Fonctions utilitaires
 # ─────────────────────────────────────────────────────────────
-def semantic_search(query, index, metadata, model, top_k=5, category_filter=None):
-    q_emb = model.encode([query], normalize_embeddings=True).astype(np.float32)
-    dists, idxs = index.search(q_emb, top_k * 3)
-    results, seen = [], set()
-    for dist, idx in zip(dists[0], idxs[0]):
-        if idx < 0 or idx >= len(metadata):
-            continue
-        meta = metadata[idx].copy()
-        if category_filter and meta.get("category") != category_filter:
-            continue
-        key = str(meta.get("article_text", ""))[:80]
-        if key in seen:
-            continue
-        seen.add(key)
-        meta["score"] = float(dist)
-        results.append(meta)
-        if len(results) >= top_k:
-            break
-    return results
-
-
 def call_claude_api(question, context, lang, api_key):
     try:
         import anthropic
+
         client = anthropic.Anthropic(api_key=api_key)
-        sys_fr = """Vous êtes un assistant juridique expert en droit marocain, intégré au système officiel du Ministère de la Justice.
-Basez-vous EXCLUSIVEMENT sur les articles fournis. Répondez en français.
-## 📋 Analyse de la situation
-## ⚖️ Lois applicables
-## 🛡️ Droits et obligations
-## 📝 Procédure recommandée
-## 📚 Références légales"""
-        sys_ar = """أنت مساعد قانوني خبير في القانون المغربي، مدمج في المنظومة الرسمية لوزارة العدل.
-استند حصراً إلى المواد المقدمة. أجب بالعربية.
-## 📋 تحليل الوضع
-## ⚖️ القوانين المنطبقة
-## 🛡️ الحقوق والالتزامات
-## 📝 الإجراء الموصى به
-## 📚 المراجع القانونية"""
-        msg = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1500,
-            system=sys_ar if lang == "ar" else sys_fr,
-            messages=[{"role": "user", "content": f"السؤال:\n{question}\n\nالمواد القانونية:\n{context}"}],
-        )
-        return msg.content[0].text
-    except Exception as e:
+        return call_claude(question, context, lang, client)
+    except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
         return f"⚠️ Erreur API : {e}"
 
 
 def format_article_card(art):
-    cat   = art.get("category", "?")
+    cat = art.get("category", "?")
     color = CATEGORY_COLORS.get(cat, "#1a3a5c")
     score = art.get("score", 0)
-    text  = art.get("article_text", "")
+    text = art.get("article_text", "")
     return f"""
 <div class="mj-article-card">
   <span class="mj-article-score">الصلة: {score:.2f}</span>
   <div class="mj-article-title">
     <span style="color:{color}">●</span>
-    {art.get('title', 'قانون')} — م.{art.get('article_number', '?')}
+    {art.get("title", "قانون")} — م.{art.get("article_number", "?")}
     <span style="background:{color};color:#fff;font-size:10px;padding:2px 8px;
                  border-radius:10px;margin-right:6px">{CATEGORY_LABELS.get(cat, cat)}</span>
   </div>
-  <div class="mj-article-text">{text[:400]}{'...' if len(text) > 400 else ''}</div>
+  <div class="mj-article-text">{text[:400]}{"..." if len(text) > 400 else ""}</div>
 </div>"""
 
 
 def extract_text_from_upload(uploaded_file):
-    name    = uploaded_file.name.lower()
+    name = uploaded_file.name.lower()
     content = uploaded_file.read()
     if name.endswith(".txt"):
         return content.decode("utf-8", errors="ignore")
     if name.endswith(".pdf"):
         try:
             import fitz
+
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                 tmp.write(content)
                 tmp_path = tmp.name
-            doc  = fitz.open(tmp_path)
+            doc = fitz.open(tmp_path)
             text = "\n".join(p.get_text() for p in doc)
             os.unlink(tmp_path)
-            return text if len(text.strip()) > 50 else "PDF scanné — installez pytesseract."
-        except Exception as e:
+            return (
+                text
+                if len(text.strip()) > 50
+                else "PDF scanné — installez pytesseract."
+            )
+        except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
             return f"Erreur PDF : {e}"
     if name.endswith(".docx"):
         try:
-            from docx import Document
             import io
-            return "\n".join(p.text for p in Document(io.BytesIO(content)).paragraphs if p.text.strip())
-        except Exception as e:
+
+            from docx import Document
+
+            return "\n".join(
+                p.text
+                for p in Document(io.BytesIO(content)).paragraphs
+                if p.text.strip()
+            )
+        except Exception as e:  # noqa: BLE001 - show the error in the UI instead of crashing
             return f"Erreur DOCX : {e}"
     return "Format non supporté."
 
@@ -534,34 +510,49 @@ with st.sidebar:
         st.markdown(
             f'<div style="text-align:center;padding:10px 0 14px">'
             f'<img src="data:{LOGO_MIME};base64,{LOGO_B64}" style="height:60px;width:auto"/>'
-            f'</div>', unsafe_allow_html=True)
+            f"</div>",
+            unsafe_allow_html=True,
+        )
     else:
-        st.markdown('<div style="text-align:center;font-size:36px;padding:10px 0 14px">⚖️</div>',
-                    unsafe_allow_html=True)
+        st.markdown(
+            '<div style="text-align:center;font-size:36px;padding:10px 0 14px">⚖️</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.markdown("""
+    st.markdown(
+        """
     <div style="text-align:center;padding-bottom:14px;border-bottom:1px solid rgba(200,153,42,0.3);
                 margin-bottom:14px;direction:rtl">
       <div style="font-size:15px;font-weight:700;color:#1a3a5c;font-family:'Cairo',sans-serif">وزارة العدل</div>
       <div style="font-size:12px;color:#c8992a;font-family:'Cairo',sans-serif">النظام القانوني الذكي</div>
       <div style="font-size:10px;color:#888;font-family:'Cairo',sans-serif">Système Juridique Intelligent Marocain</div>
-    </div>""", unsafe_allow_html=True)
+    </div>""",
+        unsafe_allow_html=True,
+    )
 
     api_key = st.text_input(
-        "🔑 Clé API Anthropic", type="password", placeholder="sk-ant-...",
+        "🔑 Clé API Anthropic",
+        type="password",
+        placeholder="sk-ant-...",
         value=os.environ.get("ANTHROPIC_API_KEY", ""),
         help="Obtenez votre clé sur console.anthropic.com",
     )
     st.markdown("---")
-    lang = st.selectbox("🌐 Langue de réponse", options=["fr", "ar"],
-                        format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇲🇦 العربية")
-    cat_raw = st.selectbox("📂 Domaine juridique",
-                            options=["Tous", "civil", "penal", "social", "familial", "education"],
-                            format_func=lambda x: CATEGORY_LABELS.get(x, x.capitalize()))
+    lang = st.selectbox(
+        "🌐 Langue de réponse",
+        options=["fr", "ar"],
+        format_func=lambda x: "🇫🇷 Français" if x == "fr" else "🇲🇦 العربية",
+    )
+    cat_raw = st.selectbox(
+        "📂 Domaine juridique",
+        options=["Tous", "civil", "penal", "social", "familial", "education"],
+        format_func=lambda x: CATEGORY_LABELS.get(x, x.capitalize()),
+    )
     category_filter = None if cat_raw == "Tous" else cat_raw
     top_k = st.slider(" Articles à récupérer", 3, 10, 5)
     st.markdown("---")
-    st.markdown("""
+    st.markdown(
+        """
     <div style="font-family:'Cairo',sans-serif;font-size:12px;color:#555;direction:rtl">
       <b style="color:#1a3a5c">المصادر القانونية :</b><br><br>
       • مدونة الالتزامات والعقود<br>
@@ -573,12 +564,15 @@ with st.sidebar:
       • قانون التعليم 51-17<br>
       • التحكيم والوساطة<br>
       • وغيرها من النصوص التشريعية...
-    </div>""", unsafe_allow_html=True)
+    </div>""",
+        unsafe_allow_html=True,
+    )
     st.markdown("---")
     st.markdown(
         '<div class="mj-disclaimer">⚠️ هذه الأداة للأغراض الإعلامية فقط. '
-        'لأي نزاع قانوني، استشر محامياً مقيداً بهيئة المحامين المغربية.</div>',
-        unsafe_allow_html=True)
+        "لأي نزاع قانوني، استشر محامياً مقيداً بهيئة المحامين المغربية.</div>",
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────
@@ -590,22 +584,24 @@ components.html(HEADER_HTML, height=625, scrolling=False)
 # ─────────────────────────────────────────────────────────────
 #  TABS
 # ─────────────────────────────────────────────────────────────
-tabs = st.tabs([
-    " الرئيسية",
-    " المستشار الذكي",
-    " تحليل وثيقة",
-    " استكشاف القوانين",
-    " سجل الاستشارات",
-])
+tabs = st.tabs(
+    [
+        " الرئيسية",
+        " المستشار الذكي",
+        " تحليل وثيقة",
+        " استكشاف القوانين",
+        " سجل الاستشارات",
+    ]
+)
 
 
 # ═══════════════════════════════════════════════════════════════
 #  TAB 0 — ACCUEIL
 # ═══════════════════════════════════════════════════════════════
 with tabs[0]:
-
     # Bannière IA
-    st.markdown("""
+    st.markdown(
+        """
     <div style="background:linear-gradient(135deg,#1a3a5c,#1e4a6e);border-radius:8px;
                 padding:24px 28px;direction:rtl;display:flex;align-items:center;gap:20px;
                 margin:20px 0 16px;border:1px solid rgba(200,153,42,0.3)">
@@ -624,27 +620,35 @@ with tabs[0]:
           استشارات فورية باللغتين العربية والفرنسية بتقنية RAG + Claude AI
         </div>
       </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""",
+        unsafe_allow_html=True,
+    )
 
     # Statistiques
     if not df_laws.empty:
         c1, c2, c3, c4 = st.columns(4)
-        total  = len(df_laws)
-        n_laws = df_laws["law_number"].nunique() if "law_number" in df_laws.columns else "—"
-        n_cats = df_laws["category"].nunique()   if "category"   in df_laws.columns else "—"
-        n_lang = df_laws["language"].nunique()   if "language"   in df_laws.columns else "—"
-        for col, (num, ar, fr) in zip([c1, c2, c3, c4], [
-            (total,  "مادة قانونية مُفهرسة", "Articles indexés"),
-            (n_laws, "نص تشريعي",            "Textes de loi"),
-            (n_cats, "مجال قانوني",           "Domaines"),
-            (n_lang, "لغة مدعومة",           "Langues"),
-        ]):
+        total = len(df_laws)
+        n_laws = (
+            df_laws["law_number"].nunique() if "law_number" in df_laws.columns else "—"
+        )
+        n_cats = df_laws["category"].nunique() if "category" in df_laws.columns else "—"
+        n_lang = df_laws["language"].nunique() if "language" in df_laws.columns else "—"
+        for col, (num, ar, fr) in zip(
+            [c1, c2, c3, c4],
+            [
+                (total, "مادة قانونية مُفهرسة", "Articles indexés"),
+                (n_laws, "نص تشريعي", "Textes de loi"),
+                (n_cats, "مجال قانوني", "Domaines"),
+                (n_lang, "لغة مدعومة", "Langues"),
+            ],
+        ):
             col.markdown(
                 f'<div class="mj-stat-card">'
                 f'<div class="num">{num}</div>'
                 f'<div class="ar">{ar}</div>'
                 f'<div class="fr">{fr}</div></div>',
-                unsafe_allow_html=True)
+                unsafe_allow_html=True,
+            )
 
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
 
@@ -652,20 +656,23 @@ with tabs[0]:
     st.markdown("####  المجالات القانونية المُغطاة")
     dc = st.columns(5)
     domains = [
-        ("⚖️", "المدني",     "العقود، الملكية، الالتزامات، البيع، الإيجار، التحكيم"),
-        ("🚨", "الجنائي",    "الجرائم، المخالفات، الإجراءات الجنائية، العنف"),
+        ("⚖️", "المدني", "العقود، الملكية، الالتزامات، البيع، الإيجار، التحكيم"),
+        ("🚨", "الجنائي", "الجرائم، المخالفات، الإجراءات الجنائية، العنف"),
         ("👷", "الاجتماعي", "قانون الشغل، الفصل، الإجازات، الراتب، الضمان"),
-        ("👨‍👩‍👧", "الأسري",   "الزواج، الطلاق، الحضانة، الكفالة، الجنسية، الإرث"),
-        ("🎓", "التعليم",    "المنظومة التعليمية، الامتحانات، الغش، المؤسسات"),
+        ("👨‍👩‍👧", "الأسري", "الزواج، الطلاق، الحضانة، الكفالة، الجنسية، الإرث"),
+        ("🎓", "التعليم", "المنظومة التعليمية، الامتحانات، الغش، المؤسسات"),
     ]
     for col, (icon, title, desc) in zip(dc, domains):
-        col.markdown(f"""
+        col.markdown(
+            f"""
         <div style="background:#fff;border-radius:8px;padding:18px 12px;text-align:center;
                     border:0.5px solid #e0e0e0;cursor:pointer;direction:rtl;min-height:160px">
           <div style="font-size:26px;margin-bottom:8px">{icon}</div>
           <div style="font-size:13px;font-weight:700;color:#1a3a5c;font-family:'Cairo',sans-serif;margin-bottom:4px">{title}</div>
           <div style="font-size:10.5px;color:#888;font-family:'Cairo',sans-serif;line-height:1.4">{desc}</div>
-        </div>""", unsafe_allow_html=True)
+        </div>""",
+            unsafe_allow_html=True,
+        )
 
     # ── FOOTER via components.html (HTML complet autonome dans iframe) ──
     components.html(FOOTER_HTML, height=300, scrolling=False)
@@ -695,10 +702,16 @@ with tabs[1]:
         key="question_area",
     )
     b1, b2 = st.columns([4, 1])
-    analyze = b1.button(" تحليل وضعي القانوني", type="primary", use_container_width=True)
-    b2.button("🗑️ مسح",
-              on_click=lambda: st.session_state.update({"question_input": "", "last_result": None}),
-              use_container_width=True)
+    analyze = b1.button(
+        " تحليل وضعي القانوني", type="primary", use_container_width=True
+    )
+    b2.button(
+        "🗑️ مسح",
+        on_click=lambda: st.session_state.update(
+            {"question_input": "", "last_result": None}
+        ),
+        use_container_width=True,
+    )
 
     if analyze and question.strip():
         if not api_key:
@@ -707,21 +720,29 @@ with tabs[1]:
             st.warning("⚠️ قاعدة البيانات غير متاحة. شغّل الـ notebooks أولاً.")
         else:
             with st.spinner("⚙️ جارٍ التحليل القانوني..."):
-                t0       = time.time()
-                articles = semantic_search(question, index, metadata, embed_model,
-                                           top_k=top_k, category_filter=category_filter)
-                ctx      = "\n\n".join([
-                    f"[{i+1}] {a.get('title','?')} — م.{a.get('article_number','?')}\n{a.get('article_text','')}"
-                    for i, a in enumerate(articles)
-                ])
+                t0 = time.time()
+                articles = semantic_search(
+                    question,
+                    index,
+                    metadata,
+                    embed_model,
+                    top_k=top_k,
+                    category_filter=category_filter,
+                )
+                ctx = "\n\n".join(
+                    [
+                        f"[{i + 1}] {a.get('title', '?')} — م.{a.get('article_number', '?')}\n{a.get('article_text', '')}"
+                        for i, a in enumerate(articles)
+                    ]
+                )
                 response = call_claude_api(question, ctx, lang, api_key)
-                result   = {
-                    "question":  question,
-                    "response":  response,
-                    "articles":  articles,
-                    "lang":      lang,
+                result = {
+                    "question": question,
+                    "response": response,
+                    "articles": articles,
+                    "lang": lang,
                     "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                    "elapsed":   round(time.time() - t0, 1),
+                    "elapsed": round(time.time() - t0, 1),
                 }
                 st.session_state["last_result"] = result
                 st.session_state.setdefault("history", []).insert(0, result)
@@ -729,14 +750,17 @@ with tabs[1]:
 
     result = st.session_state.get("last_result")
     if result:
-        st.markdown(f"<small style='color:#888'>⏱ {result.get('elapsed','?')} ثانية</small>",
-                    unsafe_allow_html=True)
+        st.markdown(
+            f"<small style='color:#888'>⏱ {result.get('elapsed', '?')} ثانية</small>",
+            unsafe_allow_html=True,
+        )
         r1, r2 = st.columns([3, 2])
         with r1:
             st.markdown("###  التحليل القانوني")
             st.markdown(
                 f'<div class="mj-result-box">{result["response"].replace(chr(10), "<br>")}</div>',
-                unsafe_allow_html=True)
+                unsafe_allow_html=True,
+            )
         with r2:
             st.markdown(f"###  المواد المُستردة ({len(result['articles'])})")
             for art in result["articles"]:
@@ -750,7 +774,9 @@ with tabs[2]:
     st.markdown("###  تحليل وثيقة قانونية")
     cu, cq = st.columns([2, 3])
     with cu:
-        uploaded = st.file_uploader("اختر ملفاً", type=["pdf","docx","txt","png","jpg","jpeg"])
+        uploaded = st.file_uploader(
+            "اختر ملفاً", type=["pdf", "docx", "txt", "png", "jpg", "jpeg"]
+        )
         if uploaded:
             st.success(f"✅ {uploaded.name}")
             with st.spinner("استخراج النص..."):
@@ -760,27 +786,38 @@ with tabs[2]:
                 st.text(doc_text[:800] + ("..." if len(doc_text) > 800 else ""))
             st.session_state["doc_text"] = doc_text
     with cq:
-        doc_q = st.text_area("سؤالك حول الوثيقة :", height=100,
-                              placeholder="ما هي حقوقي وفق هذه الوثيقة؟ / هل توجد بنود غير قانونية؟")
-        if st.button(" تحليل الوثيقة", type="primary",
-                     disabled=not (st.session_state.get("doc_text") and doc_q)):
+        doc_q = st.text_area(
+            "سؤالك حول الوثيقة :",
+            height=100,
+            placeholder="ما هي حقوقي وفق هذه الوثيقة؟ / هل توجد بنود غير قانونية؟",
+        )
+        if st.button(
+            " تحليل الوثيقة",
+            type="primary",
+            disabled=not (st.session_state.get("doc_text") and doc_q),
+        ):
             if not api_key:
                 st.error("⚠️ مفتاح API مطلوب.")
             else:
                 with st.spinner("جارٍ التحليل..."):
-                    combined = f"{doc_q}\n\nمحتوى الوثيقة:\n{st.session_state.get('doc_text','')[:3000]}"
+                    combined = f"{doc_q}\n\nمحتوى الوثيقة:\n{st.session_state.get('doc_text', '')[:3000]}"
                     arts, ctx = [], ""
                     if index and metadata and embed_model:
-                        arts = semantic_search(combined, index, metadata, embed_model, top_k=4)
-                        ctx  = "\n\n".join([
-                            f"[{i+1}] {a.get('title','?')}\n{a.get('article_text','')}"
-                            for i, a in enumerate(arts)
-                        ])
+                        arts = semantic_search(
+                            combined, index, metadata, embed_model, top_k=4
+                        )
+                        ctx = "\n\n".join(
+                            [
+                                f"[{i + 1}] {a.get('title', '?')}\n{a.get('article_text', '')}"
+                                for i, a in enumerate(arts)
+                            ]
+                        )
                     response = call_claude_api(combined, ctx, lang, api_key)
                     st.markdown("### 📋 نتيجة التحليل")
                     st.markdown(
                         f'<div class="mj-result-box">{response.replace(chr(10), "<br>")}</div>',
-                        unsafe_allow_html=True)
+                        unsafe_allow_html=True,
+                    )
                     for art in arts:
                         st.markdown(format_article_card(art), unsafe_allow_html=True)
 
@@ -794,12 +831,16 @@ with tabs[3]:
         st.info("قاعدة البيانات غير محملة. شغّل الـ notebook الأول.")
     else:
         f1, f2, f3 = st.columns(3)
-        cats    = (["الكل"] + sorted(df_laws["category"].dropna().unique().tolist())
-                   if "category" in df_laws.columns else ["الكل"])
-        sel_cat = f1.selectbox("المجال", cats,
-                                format_func=lambda x: CATEGORY_LABELS.get(x, x.capitalize()))
-        srch    = f2.text_input(" بحث في النصوص", placeholder="كلمة مفتاح...")
-        n_show  = f3.slider("عدد المواد", 5, 50, 10)
+        cats = (
+            ["الكل"] + sorted(df_laws["category"].dropna().unique().tolist())
+            if "category" in df_laws.columns
+            else ["الكل"]
+        )
+        sel_cat = f1.selectbox(
+            "المجال", cats, format_func=lambda x: CATEGORY_LABELS.get(x, x.capitalize())
+        )
+        srch = f2.text_input(" بحث في النصوص", placeholder="كلمة مفتاح...")
+        n_show = f3.slider("عدد المواد", 5, 50, 10)
 
         filt = df_laws.copy()
         if sel_cat != "الكل" and "category" in filt.columns:
@@ -808,44 +849,62 @@ with tabs[3]:
             filt = filt[filt["article_text"].str.contains(srch, case=False, na=False)]
 
         st.markdown(f"**{len(filt)} مادة** وجدت")
-        dcols = [c for c in ["title","article_number","category","language","article_text"]
-                 if c in filt.columns]
+        dcols = [
+            c
+            for c in ["title", "article_number", "category", "language", "article_text"]
+            if c in filt.columns
+        ]
         if dcols:
-            st.dataframe(filt[dcols].head(n_show), use_container_width=True, hide_index=True)
+            st.dataframe(
+                filt[dcols].head(n_show), use_container_width=True, hide_index=True
+            )
 
         if "category" in df_laws.columns and len(df_laws) > 0:
             import matplotlib
             import matplotlib.pyplot as plt
-            matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+
+            matplotlib.rcParams["font.family"] = "DejaVu Sans"
 
             fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-            fig.patch.set_facecolor('#f5f7fa')
+            fig.patch.set_facecolor("#f5f7fa")
 
-            cc     = df_laws["category"].value_counts()
+            cc = df_laws["category"].value_counts()
             colors = [CATEGORY_COLORS.get(c, "#1a3a5c") for c in cc.index]
-            bars   = axes[0].barh(cc.index, cc.values, color=colors, height=0.6)
-            axes[0].set_title("Articles par domaine juridique", fontweight="bold", fontsize=13, pad=12)
-            axes[0].set_facecolor('#f5f7fa')
-            axes[0].spines[['top', 'right']].set_visible(False)
+            bars = axes[0].barh(cc.index, cc.values, color=colors, height=0.6)
+            axes[0].set_title(
+                "Articles par domaine juridique", fontweight="bold", fontsize=13, pad=12
+            )
+            axes[0].set_facecolor("#f5f7fa")
+            axes[0].spines[["top", "right"]].set_visible(False)
             axes[0].tick_params(labelsize=10)
             for bar, val in zip(bars, cc.values):
-                axes[0].text(bar.get_width() + 0.1,
-                             bar.get_y() + bar.get_height() / 2,
-                             str(val), va='center', fontsize=10, color='#333')
+                axes[0].text(
+                    bar.get_width() + 0.1,
+                    bar.get_y() + bar.get_height() / 2,
+                    str(val),
+                    va="center",
+                    fontsize=10,
+                    color="#333",
+                )
 
             if "language" in df_laws.columns:
                 lc = df_laws["language"].value_counts()
-                wedge_colors = ["#1a3a5c","#c8992a","#2e7d32","#b71c1c"][:len(lc)]
+                wedge_colors = ["#1a3a5c", "#c8992a", "#2e7d32", "#b71c1c"][: len(lc)]
                 wedges, texts, autotexts = axes[1].pie(
-                    lc.values, labels=lc.index, autopct="%1.0f%%",
-                    colors=wedge_colors, startangle=90,
-                    wedgeprops=dict(edgecolor='white', linewidth=2),
+                    lc.values,
+                    labels=lc.index,
+                    autopct="%1.0f%%",
+                    colors=wedge_colors,
+                    startangle=90,
+                    wedgeprops={"edgecolor": "white", "linewidth": 2},
                 )
                 for t in autotexts:
                     t.set_fontsize(11)
-                    t.set_color('white')
-                    t.set_fontweight('bold')
-                axes[1].set_title("Répartition par langue", fontweight="bold", fontsize=13, pad=12)
+                    t.set_color("white")
+                    t.set_fontweight("bold")
+                axes[1].set_title(
+                    "Répartition par langue", fontweight="bold", fontsize=13, pad=12
+                )
 
             plt.tight_layout(pad=2)
             st.pyplot(fig)
@@ -864,16 +923,23 @@ with tabs[4]:
         st.download_button(
             "📥 تصدير (JSON)",
             data=json.dumps(
-                [{"timestamp": r["timestamp"], "question": r["question"], "response": r["response"]}
-                 for r in history],
-                ensure_ascii=False, indent=2),
+                [
+                    {
+                        "timestamp": r["timestamp"],
+                        "question": r["question"],
+                        "response": r["response"],
+                    }
+                    for r in history
+                ],
+                ensure_ascii=False,
+                indent=2,
+            ),
             file_name=f"استشارات_{datetime.now().strftime('%Y%m%d')}.json",
             mime="application/json",
         )
         for i, entry in enumerate(history):
             with st.expander(
-                f"[{entry['timestamp']}] {entry['question'][:70]}...",
-                expanded=(i == 0)
+                f"[{entry['timestamp']}] {entry['question'][:70]}...", expanded=(i == 0)
             ):
                 a, b = st.columns([3, 2])
                 with a:
@@ -888,5 +954,6 @@ with tabs[4]:
                             st.markdown(
                                 f'<span style="background:{c};color:#fff;font-size:10px;'
                                 f'padding:2px 10px;border-radius:10px;margin:2px;display:inline-block">'
-                                f'{art.get("title","?")[:28]} — م.{art.get("article_number","?")}</span>',
-                                unsafe_allow_html=True)
+                                f"{art.get('title', '?')[:28]} — م.{art.get('article_number', '?')}</span>",
+                                unsafe_allow_html=True,
+                            )

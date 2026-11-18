@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Fichiers lourds régénérables (index FAISS, embeddings, modèles)
+vector_db/*.index
+vector_db/*.npy
+models/*.pkl
+
+# Éditeurs / OS
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+
+# Claude Code (réglages personnels)
+.claude/settings.local.json
