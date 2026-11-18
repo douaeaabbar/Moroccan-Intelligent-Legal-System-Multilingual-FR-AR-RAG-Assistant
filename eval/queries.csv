@@ -1,0 +1,35 @@
+question,lang,category,expected_ids
+"Mon patron peut-il me renvoyer parce que je suis enceinte ?",fr,social,35
+"Combien de jours de vacances payées ai-je droit par an ?",fr,social,12
+"On m'a refusé un poste à cause de mon origine, est-ce légal ?",fr,social,11
+"Après une condamnation pénale, mon employeur peut-il me licencier sans indemnités ?",fr,social,15
+"Qui fixe le salaire minimum au Maroc ?",fr,social,13
+"Comment peut-on mettre fin à un contrat de travail à durée indéterminée ?",fr,social,14
+"Mon voisin a abîmé ma voiture, doit-il payer les réparations ?",fr,civil,2;3
+"J'ai signé un contrat parce qu'on m'a menti, est-il valable ?",fr,civil,5
+"J'ai acheté un terrain, à partir de quand en suis-je propriétaire ?",fr,civil,7
+"Quelles sont les obligations de celui qui loue un appartement ?",fr,civil,8
+"Un fabricant a-t-il le droit de vendre un produit dangereux ?",fr,civil,23;22
+"Nous avons un litige commercial, pouvons-nous passer par un arbitre plutôt que le tribunal ?",fr,civil,34;33
+"Mon mari me frappe, quelles aides puis-je obtenir ?",fr,penal,18;16
+"Quelle peine risque une personne qui a volé un téléphone ?",fr,penal,38
+"Un commerçant m'a trompé sur la marchandise, que risque-t-il ?",fr,penal,25;45
+"Quelle est la sanction pour avoir frappé et blessé quelqu'un ?",fr,penal,37
+"Quelle peine pour un meurtre ?",fr,penal,36
+"À quel âge peut-on se marier au Maroc ?",fr,familial,40
+"Comment prendre en charge un enfant abandonné ?",fr,familial,21;19
+"Après le divorce, qui garde les enfants ?",fr,familial,42
+"Ma mère est marocaine et mon père n'a pas de nationalité, suis-je marocain ?",fr,familial,31
+"J'habite au Maroc depuis six ans, puis-je demander la nationalité ?",fr,familial,32
+"Un élève qui triche avec son téléphone à l'examen risque-t-il la prison ?",fr,education,29
+"L'école maternelle est-elle obligatoire pour les enfants étrangers vivant au Maroc ?",fr,education,28
+"Les adultes ont-ils aussi droit à la formation ?",fr,education,27
+"هل يمكن لمشغلي أن يطردني لأنني حامل؟",ar,social,35
+"كم يوما من العطلة السنوية المؤدى عنها يحق لي؟",ar,social,12
+"زوجي يعنفني، ما هي الحماية التي يوفرها لي القانون؟",ar,penal,18;16
+"ما هي عقوبة السرقة في القانون المغربي؟",ar,penal,38
+"ما هو السن القانوني للزواج؟",ar,familial,40
+"من له الحق في حضانة الأطفال بعد الطلاق؟",ar,familial,42
+"هل لدي الحق في محاكمة عادلة إذا اتهمت بجريمة؟",ar,penal,44
+"ما هي العقوبة على الغش في الامتحان؟",ar,education,29;30
+"اشتريت منزلا، متى تنتقل إلي الملكية؟",ar,civil,7
