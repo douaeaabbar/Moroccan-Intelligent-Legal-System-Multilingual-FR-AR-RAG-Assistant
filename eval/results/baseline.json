@@ -1,0 +1,719 @@
+{
+  "overall": {
+    "n": 34,
+    "recall@1": 0.7647058823529411,
+    "recall@3": 0.8529411764705882,
+    "recall@5": 0.9411764705882353,
+    "mrr": 0.8294117647058823,
+    "ndcg@5": 0.8565650771555794,
+    "category_recall@1": 0.9411764705882353
+  },
+  "ar": {
+    "n": 9,
+    "recall@1": 0.6666666666666666,
+    "recall@3": 0.8888888888888888,
+    "recall@5": 0.8888888888888888,
+    "mrr": 0.7777777777777778,
+    "ndcg@5": 0.7979533662545669,
+    "category_recall@1": 1.0
+  },
+  "fr": {
+    "n": 25,
+    "recall@1": 0.8,
+    "recall@3": 0.84,
+    "recall@5": 0.96,
+    "mrr": 0.848,
+    "ndcg@5": 0.8776652930799439,
+    "category_recall@1": 0.92
+  },
+  "details": [
+    {
+      "question": "Mon patron peut-il me renvoyer parce que je suis enceinte ?",
+      "lang": "fr",
+      "expected_ids": [
+        35
+      ],
+      "returned_ids": [
+        35,
+        14,
+        12,
+        11,
+        15
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Combien de jours de vacances payées ai-je droit par an ?",
+      "lang": "fr",
+      "expected_ids": [
+        12
+      ],
+      "returned_ids": [
+        12,
+        13,
+        37,
+        25,
+        38
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "On m'a refusé un poste à cause de mon origine, est-ce légal ?",
+      "lang": "fr",
+      "expected_ids": [
+        11
+      ],
+      "returned_ids": [
+        11,
+        15,
+        35,
+        32,
+        14
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Après une condamnation pénale, mon employeur peut-il me licencier sans indemnités ?",
+      "lang": "fr",
+      "expected_ids": [
+        15
+      ],
+      "returned_ids": [
+        15,
+        14,
+        25,
+        35,
+        11
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Qui fixe le salaire minimum au Maroc ?",
+      "lang": "fr",
+      "expected_ids": [
+        13
+      ],
+      "returned_ids": [
+        32,
+        28,
+        31,
+        33,
+        13
+      ],
+      "recall@1": 0.0,
+      "recall@3": 0.0,
+      "recall@5": 1.0,
+      "mrr": 0.2,
+      "ndcg@5": 0.38685280723454163,
+      "category_recall@1": 0.0
+    },
+    {
+      "question": "Comment peut-on mettre fin à un contrat de travail à durée indéterminée ?",
+      "lang": "fr",
+      "expected_ids": [
+        14
+      ],
+      "returned_ids": [
+        14,
+        12,
+        9,
+        15,
+        4
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Mon voisin a abîmé ma voiture, doit-il payer les réparations ?",
+      "lang": "fr",
+      "expected_ids": [
+        2,
+        3
+      ],
+      "returned_ids": [
+        2,
+        3,
+        37,
+        15,
+        5
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "J'ai signé un contrat parce qu'on m'a menti, est-il valable ?",
+      "lang": "fr",
+      "expected_ids": [
+        5
+      ],
+      "returned_ids": [
+        5,
+        14,
+        15,
+        3,
+        1
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "J'ai acheté un terrain, à partir de quand en suis-je propriétaire ?",
+      "lang": "fr",
+      "expected_ids": [
+        7
+      ],
+      "returned_ids": [
+        7,
+        5,
+        21,
+        32,
+        3
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Quelles sont les obligations de celui qui loue un appartement ?",
+      "lang": "fr",
+      "expected_ids": [
+        8
+      ],
+      "returned_ids": [
+        8,
+        4,
+        1,
+        7,
+        2
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Un fabricant a-t-il le droit de vendre un produit dangereux ?",
+      "lang": "fr",
+      "expected_ids": [
+        22,
+        23
+      ],
+      "returned_ids": [
+        23,
+        22,
+        24,
+        7,
+        3
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Nous avons un litige commercial, pouvons-nous passer par un arbitre plutôt que le tribunal ?",
+      "lang": "fr",
+      "expected_ids": [
+        33,
+        34
+      ],
+      "returned_ids": [
+        34,
+        33,
+        44,
+        5,
+        25
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Mon mari me frappe, quelles aides puis-je obtenir ?",
+      "lang": "fr",
+      "expected_ids": [
+        16,
+        18
+      ],
+      "returned_ids": [
+        41,
+        2,
+        15,
+        40,
+        42
+      ],
+      "recall@1": 0.0,
+      "recall@3": 0.0,
+      "recall@5": 0.0,
+      "mrr": 0.0,
+      "ndcg@5": 0.0,
+      "category_recall@1": 0.0
+    },
+    {
+      "question": "Quelle peine risque une personne qui a volé un téléphone ?",
+      "lang": "fr",
+      "expected_ids": [
+        38
+      ],
+      "returned_ids": [
+        38,
+        29,
+        25,
+        37,
+        36
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Un commerçant m'a trompé sur la marchandise, que risque-t-il ?",
+      "lang": "fr",
+      "expected_ids": [
+        25,
+        45
+      ],
+      "returned_ids": [
+        25,
+        45,
+        24,
+        38,
+        15
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Quelle est la sanction pour avoir frappé et blessé quelqu'un ?",
+      "lang": "fr",
+      "expected_ids": [
+        37
+      ],
+      "returned_ids": [
+        37,
+        36,
+        18,
+        17,
+        43
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Quelle peine pour un meurtre ?",
+      "lang": "fr",
+      "expected_ids": [
+        36
+      ],
+      "returned_ids": [
+        36,
+        30,
+        37,
+        43,
+        18
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "À quel âge peut-on se marier au Maroc ?",
+      "lang": "fr",
+      "expected_ids": [
+        40
+      ],
+      "returned_ids": [
+        32,
+        28,
+        31,
+        40,
+        33
+      ],
+      "recall@1": 0.0,
+      "recall@3": 0.0,
+      "recall@5": 1.0,
+      "mrr": 0.25,
+      "ndcg@5": 0.43067655807339306,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Comment prendre en charge un enfant abandonné ?",
+      "lang": "fr",
+      "expected_ids": [
+        19,
+        21
+      ],
+      "returned_ids": [
+        20,
+        21,
+        19,
+        42,
+        36
+      ],
+      "recall@1": 0.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 0.5,
+      "ndcg@5": 0.6934264036172708,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Après le divorce, qui garde les enfants ?",
+      "lang": "fr",
+      "expected_ids": [
+        42
+      ],
+      "returned_ids": [
+        41,
+        40,
+        20,
+        42,
+        21
+      ],
+      "recall@1": 0.0,
+      "recall@3": 0.0,
+      "recall@5": 1.0,
+      "mrr": 0.25,
+      "ndcg@5": 0.43067655807339306,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Ma mère est marocaine et mon père n'a pas de nationalité, suis-je marocain ?",
+      "lang": "fr",
+      "expected_ids": [
+        31
+      ],
+      "returned_ids": [
+        31,
+        32,
+        28,
+        33,
+        20
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "J'habite au Maroc depuis six ans, puis-je demander la nationalité ?",
+      "lang": "fr",
+      "expected_ids": [
+        32
+      ],
+      "returned_ids": [
+        32,
+        31,
+        28,
+        33,
+        40
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Un élève qui triche avec son téléphone à l'examen risque-t-il la prison ?",
+      "lang": "fr",
+      "expected_ids": [
+        29
+      ],
+      "returned_ids": [
+        29,
+        38,
+        36,
+        37,
+        30
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "L'école maternelle est-elle obligatoire pour les enfants étrangers vivant au Maroc ?",
+      "lang": "fr",
+      "expected_ids": [
+        28
+      ],
+      "returned_ids": [
+        28,
+        32,
+        31,
+        33,
+        27
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "Les adultes ont-ils aussi droit à la formation ?",
+      "lang": "fr",
+      "expected_ids": [
+        27
+      ],
+      "returned_ids": [
+        27,
+        42,
+        28,
+        20,
+        18
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "هل يمكن لمشغلي أن يطردني لأنني حامل؟",
+      "lang": "ar",
+      "expected_ids": [
+        35
+      ],
+      "returned_ids": [
+        35,
+        11,
+        14,
+        15,
+        38
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "كم يوما من العطلة السنوية المؤدى عنها يحق لي؟",
+      "lang": "ar",
+      "expected_ids": [
+        12
+      ],
+      "returned_ids": [
+        12,
+        40,
+        37,
+        7,
+        32
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "زوجي يعنفني، ما هي الحماية التي يوفرها لي القانون؟",
+      "lang": "ar",
+      "expected_ids": [
+        16,
+        18
+      ],
+      "returned_ids": [
+        18,
+        43,
+        16,
+        22,
+        17
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 0.9197207891481876,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "ما هي عقوبة السرقة في القانون المغربي؟",
+      "lang": "ar",
+      "expected_ids": [
+        38
+      ],
+      "returned_ids": [
+        25,
+        32,
+        33,
+        29,
+        37
+      ],
+      "recall@1": 0.0,
+      "recall@3": 0.0,
+      "recall@5": 0.0,
+      "mrr": 0.0,
+      "ndcg@5": 0.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "ما هو السن القانوني للزواج؟",
+      "lang": "ar",
+      "expected_ids": [
+        40
+      ],
+      "returned_ids": [
+        40,
+        39,
+        41,
+        27,
+        32
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "من له الحق في حضانة الأطفال بعد الطلاق؟",
+      "lang": "ar",
+      "expected_ids": [
+        42
+      ],
+      "returned_ids": [
+        41,
+        42,
+        21,
+        20,
+        40
+      ],
+      "recall@1": 0.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 0.5,
+      "ndcg@5": 0.6309297535714575,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "هل لدي الحق في محاكمة عادلة إذا اتهمت بجريمة؟",
+      "lang": "ar",
+      "expected_ids": [
+        44
+      ],
+      "returned_ids": [
+        43,
+        44,
+        36,
+        29,
+        30
+      ],
+      "recall@1": 0.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 0.5,
+      "ndcg@5": 0.6309297535714575,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "ما هي العقوبة على الغش في الامتحان؟",
+      "lang": "ar",
+      "expected_ids": [
+        29,
+        30
+      ],
+      "returned_ids": [
+        29,
+        30,
+        38,
+        25,
+        37
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    },
+    {
+      "question": "اشتريت منزلا، متى تنتقل إلي الملكية؟",
+      "lang": "ar",
+      "expected_ids": [
+        7
+      ],
+      "returned_ids": [
+        7,
+        4,
+        2,
+        8,
+        12
+      ],
+      "recall@1": 1.0,
+      "recall@3": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "ndcg@5": 1.0,
+      "category_recall@1": 1.0
+    }
+  ]
+}

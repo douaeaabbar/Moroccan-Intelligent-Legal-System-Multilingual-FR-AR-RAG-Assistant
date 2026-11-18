@@ -83,3 +83,19 @@ def test_evaluate_returns_all_metrics_overall_and_per_language():
         for metric in METRICS:
             assert 0.0 <= report[group][metric] <= 1.0
     assert report["overall"]["n"] == 2
+
+
+# T4 — readable report: one row per metric, one column per group, no "details" column
+def test_format_report_has_one_row_per_metric_and_column_per_group():
+    report = {
+        "overall": {"n": 2, **dict.fromkeys(METRICS, 0.5)},
+        "fr": {"n": 1, **dict.fromkeys(METRICS, 1.0)},
+        "details": [],
+    }
+
+    text = evaluation.format_report(report)
+
+    assert "overall" in text and "fr" in text and "details" not in text
+    for metric in METRICS:
+        assert metric in text
+    assert "0.500" in text and "1.000" in text

@@ -12,6 +12,7 @@ DATA_DIR = ROOT / "data"
 APP_DIR = ROOT / "app"
 
 DEFAULT_MODEL = "claude-sonnet-5-5"
+EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def load_env() -> None:

@@ -90,3 +90,24 @@ def evaluate(queries: list[dict], index: Any, metadata: list[dict], model: Any) 
         for q, ids, s in scored
     ]
     return report
+
+
+REPORT_METRICS = (
+    "recall@1",
+    "recall@3",
+    "recall@5",
+    "mrr",
+    "ndcg@5",
+    "category_recall@1",
+)
+
+
+def format_report(report: dict) -> str:
+    """Readable table: one row per metric, one column per group (overall, fr, ar...)."""
+    groups = [g for g in report if g != "details"]
+    lines = ["metric".ljust(18) + "".join(g.rjust(10) for g in groups)]
+    lines.append("n".ljust(18) + "".join(str(report[g]["n"]).rjust(10) for g in groups))
+    for m in REPORT_METRICS:
+        values = (f"{report[g].get(m, float('nan')):.3f}" for g in groups)
+        lines.append(m.ljust(18) + "".join(v.rjust(10) for v in values))
+    return "\n".join(lines)
